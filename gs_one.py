@@ -1,6 +1,6 @@
 ﻿#-------------------------------------------------------------------------------
-# Name:        ga_one.py
-# Purpose:     GA Algorithm; "one-to-one" case
+# Name:        gs_one.py
+# Purpose:     GS Algorithm; "one-to-one" case
 #
 # Author:      Hanami Maeda, Atsushi Yamagishi
 #
