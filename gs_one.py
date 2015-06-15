@@ -54,8 +54,7 @@ def deferred_acceptance(males, females):
                     # 妻を奪われ独身に戻る
                     matches[matched_male] = ""
                     singles.append(matched_male)
-
-    print matches
+    return matches
 
 
 
