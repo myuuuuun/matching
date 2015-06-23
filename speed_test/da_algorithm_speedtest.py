@@ -4,10 +4,10 @@
 
 from __future__ import division
 import math
-import functools  #for python3
 from random import uniform, normalvariate, shuffle
 import numpy as np
 import time
+from numba import jit
 np.set_printoptions(threshold=np.nan)
 
 
@@ -36,7 +36,6 @@ def gale_shapley(applicant_prefers_input, host_prefers_input, **kwargs):
         app_col += 1
         host_col += 1
 
-
     if (app_row != host_col-1) or (host_row != app_col-1):
         raise CustomConditionError("選好表の行列数が不正です")
 
@@ -52,7 +51,6 @@ def gale_shapley(applicant_prefers_input, host_prefers_input, **kwargs):
     # マッチングを入れる（初期値は未マッチングflag）
     applicant_matchings = np.repeat(applicant_unmatched_mark, app_row)
     host_matchings = np.repeat(host_unmatched_mark, host_row)
-
 
     # メインループ
     next_start = np.zeros(app_row, dtype=int)
@@ -93,6 +91,77 @@ def gale_shapley(applicant_prefers_input, host_prefers_input, **kwargs):
     return applicant_matchings, host_matchings
 
 
+# with numba
+@jit
+def gale_shapley2(applicant_prefers_input, host_prefers_input):
+
+    # 選好表の型チェック。listならnumpyへ変換
+    applicant_preferences = np.asarray(applicant_prefers_input, dtype=int)
+    host_preferences = np.asarray(host_prefers_input, dtype=int)
+
+    # 選好表の行列数をチェック
+    app_row, app_col = applicant_preferences.shape
+    host_row, host_col = host_preferences.shape
+
+    if (app_row != host_col-1) or (host_row != app_col-1):
+        return False
+    
+    applicant_unmatched_mark = app_col - 1
+    host_unmatched_mark = host_col - 1
+
+    # ソート
+    host_preferences = np.argsort(host_preferences, axis=-1)
+
+    # 処理待ちのapplicantのリスト（1なら処理待ち、0なら処理済み）
+    stack = np.ones(app_row, dtype=int)
+
+    # マッチングを入れる（初期値は未マッチングflag）
+    applicant_matchings = np.repeat(applicant_unmatched_mark, app_row)
+    host_matchings = np.repeat(host_unmatched_mark, host_row)
+
+    # メインループ
+    next_start = np.zeros(app_row, dtype=int)
+    while stack.sum() > 0:
+        
+        # 応募者を全員調べる
+        for applicant in range(stack):
+            
+            applicant = stack.pop()
+
+            # 取り出した応募者の選好表
+            applicant_preference = applicant_preferences[applicant]
+
+            # 選好表の上から順番にプロポーズ
+            for index, host in enumerate(applicant_preference[next_start[applicant]:]):
+                # unmatched_markまでapplicantがマッチングできなければ、アンマッチ
+                if host == applicant_unmatched_mark:
+                    break
+
+                # プロポーズする相手の選好表
+                host_preference = host_preferences[host]
+
+                # 相手の選好表で、応募者と現在のマッチング相手のどちらが順位が高いのか比較する
+                rank_applicant = host_preference[applicant]
+                matched = host_matchings[host]
+                rank_matched = host_preference[matched]
+
+                # もし受け入れ側が新しい応募者の方を好むなら
+                if rank_matched > rank_applicant:
+                    applicant_matchings[applicant] = host
+                    host_matchings[host] = applicant
+
+                    # 既にマッチしていた相手がダミーでなければ、マッチングを解除する
+                    if matched != host_unmatched_mark:
+                        applicant_matchings[matched] = applicant_unmatched_mark
+                        stack.append(matched)
+
+                    next_start[applicant] = index
+                    break
+
+    return applicant_matchings, host_matchings
+    
+
+
 # 選好表をランダムに作る
 def random_preference_table(row, col, **kwargs):
     unmatch = kwargs.get('unmatch', True)
@@ -106,7 +175,7 @@ def random_preference_table(row, col, **kwargs):
 
         return li
 
-    else:     
+    else:
         def __sshuffle(li):
             shuffle(li)
             return li
@@ -153,6 +222,14 @@ if __name__ == '__main__':
     print("DAアルゴリズム スタート!")
     start = time.time()
     matching = gale_shapley(app_table, hos_table)
+    stop = time.time() - start
+    print("ストップ！")
+    print("実行時間は " + str(stop) + " 秒でした\n")
+
+
+    print("DAアルゴリズム2 スタート!")
+    start = time.time()
+    matching = gale_shapley2(app_table, hos_table)
     stop = time.time() - start
     print("ストップ！")
     print("実行時間は " + str(stop) + " 秒でした\n")
