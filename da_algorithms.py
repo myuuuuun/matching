@@ -229,6 +229,7 @@ def matching_score(matching, applicant_prefers_input, host_prefers_input):
     return [applicants_score, hosts_score]
     """
 
+
 if __name__ == '__main__':
     # app_table = [[3, 1, 4, 0, 2], [3, 2, 4, 0, 1]]
     # hos_table = [[0, 2, 1], [2, 0, 1], [0, 1, 2], [0, 1, 2]]
