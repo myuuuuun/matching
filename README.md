@@ -69,6 +69,3 @@ GSアルゴリズムに加えて、それ以外の安定マッチング（男女
 * _[Introduction to Market Design and Two-Sided Matching Markets](https://docs.google.com/viewer?a=v&pid=sites&srcid=ZGVmYXVsdGRvbWFpbnxmdWhpdG9rb2ppbWFlY29ub21pY3N8Z3g6NmVkYWU1ZGU5NDZkMWZh)_  
 Fuhito Kojima先生の（授業?）スライド。  
 
-
-
-
